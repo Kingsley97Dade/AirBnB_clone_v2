@@ -7,12 +7,11 @@ from fabric import task
 from datetime import datetime
 import os
 
-env.hosts = ['<IP web-01>', '<IP web-02>']
-env.user = 'Kingsley Dade'
-env.key_filename = 'ssh 9cb0161e2be3@9cb0161e2be3.c567ebef.alx-cod.online'
+env.hosts = ['34.229.70.201', '52.204.71.189']
+env.user = 'ubuntu'
 
-@task
-def do_pack(c):
+
+def do_pack():
     """
     Generates a .tgz archive from the contents of the web_static folder.
 
@@ -37,8 +36,7 @@ def do_pack(c):
     else:
         return None
 
-@task
-def do_deploy(c, archive_path):
+def do_deploy(archive_path):
     """
     Distributes an archive to web servers.
 
@@ -78,8 +76,7 @@ def do_deploy(c, archive_path):
         print(f"Deployment failed: {e}")
         return False
 
-@task
-def deploy(c):
+def deploy():
     """
     Creates and distributes an archive to web servers.
 
