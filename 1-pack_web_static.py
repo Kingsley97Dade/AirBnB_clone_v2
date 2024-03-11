@@ -6,7 +6,6 @@ from the contents of the web_static folder using the do_pack function.
 
 from fabric.api import local, runs_once
 from datetime import datetime
-import os
 
 @runs_once
 def do_pack():
