@@ -11,8 +11,8 @@ env.hosts = ['34.229.70.201', '52.204.71.189']
 env.user = 'Ubuntu'
 env.key_filename = '~/.ssh/school'
 
-@task
-def do_clean(c, number=0):
+
+def do_clean(number=0):
     """
     Deletes out-of-date archives.
 
@@ -23,31 +23,18 @@ def do_clean(c, number=0):
         bool: True if all operations have been done correctly, otherwise False.
     """
     try:
-        # Delete unnecessary archives in the versions folder
-        local_path = "versions"
-        archives = sorted(os.listdir(local_path))
-        num_to_keep = max(0, number)
+        # context manger for local
+        with lcd('versions/'):
+            versions = local('ls -t', capture=True).split()
+            versions = versions[1:] if number <= 1 else versions[number:]
+            for v in versions:
+                local(f'rm -rf {v}')
 
-        for arch in archives[:-num_to_keep]:
-            arch_path = os.path.join(local_path, arch)
-            c.local(f"rm -f {arch_path}")
+        # context manger for remote
+        with cd('/data/web_static/releases'):
+            number = 2 if number <= 1 else number + 1
+            run(f'ls -t | tail +{number} | xargs rm -rf')
 
-        # Delete unnecessary archives on web servers
-        remote_path = "/data/web_static/releases/"
-        releases = []
-        for host in env.hosts:
-            with c.cd(remote_path):
-                releases += c.run("ls -1 | grep '^web_static_'").stdout.strip().split('\n')
-
-        releases = sorted(releases, reverse=True)
-        for release in releases[:-num_to_keep]:
-            release_path = os.path.join(remote_path, release)
-            c.run(f"sudo rm -rf {release_path}")
-
-        print("Cleaned up old archives!")
-        return True
-
-    except Exception as e:
-        print(f"Cleanup failed: {e}")
-        return False
+    except Exception:
+        pass
 
