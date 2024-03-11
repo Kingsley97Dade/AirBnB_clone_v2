@@ -1,36 +1,64 @@
 #!/usr/bin/env bash
 # This script sets up web servers for the deployment of web_static.
 
-# Install Nginx if not already installed
-if ! command -v nginx &> /dev/null; then
-    sudo apt-get update
-    sudo apt-get -y install nginx
-fi
+LINK_NAME="/data/web_static/current"
 
-# Create necessary directories if they don't exist
-sudo mkdir -p /data/web_static/{releases/test,shared}
-sudo chown -R ubuntu:ubuntu /data/
+# installed nginx if it's not installed already
+[[ ! $(dpkg-query -W nginx) ]] > /dev/null 2>&1 && apt update && apt install nginx -y
 
-# Create a fake HTML file
-echo "<html><head></head><body>Test Page</body></html>" | sudo tee /data/web_static/releases/test/index.html
+mkdir -p /data/web_static/{releases,shared}
+mkdir -p /data/web_static/releases/test/
+cat << EOF > /data/web_static/releases/test/index.html
+<html>
+  <head>
+  </head>
+  <body>
+    Holberton School
+  </body>
+</html>
+EOF
 
-# Create or recreate symbolic link
-sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
+# if link exists; remove it, and create it everytime script runs
+[ -L "$LINK_NAME" ] && rm "$LINK_NAME"
 
-# Update Nginx configuration
-nginx_config="/etc/nginx/sites-available/default"
-nginx_alias="location /hbnb_static { alias /data/web_static/current/; }"
+ln -s /data/web_static/releases/test/ "$LINK_NAME"
 
-# Add or update alias in Nginx configuration
-if grep -q "location /hbnb_static" "$nginx_config"; then
-    sudo sed -i "s@location /hbnb_static.*@$nginx_alias@" "$nginx_config"
-else
-    sudo sed -i "/server {/a $nginx_alias" "$nginx_config"
-fi
+# assign ownership
+chown -R ubuntu:ubuntu /data/
 
-# Restart Nginx
-sudo service nginx restart
+# Update the Nginx configuration to serve the content of /data/web_static/current/ to hbnb_static
+# (ex: https://mydomainname.tech/hbnb_static
+cat << EOF > /etc/nginx/sites-enabled/default
+server {
+	add_header X-Served-By $(hostname);
 
-# Exit successfully
-exit 0
+	listen 80 default_server;
+	listen [::]:80 default_server;
 
+	root /var/www/html;
+
+	# Add index.php to the list if you are using PHP
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files \$uri \$uri/ =404;
+	}
+	location /redirect_me {
+		return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+	}
+	error_page 404 /404.html;
+        location = /404.html {
+		root /var/www/html;
+                internal;
+        }
+	location /hbnb_static {
+		alias /data/web_static/current/;
+	}
+}
+EOF
+
+service nginx restart
