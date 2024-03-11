@@ -3,53 +3,37 @@
 Fabric script for deploying web_static to web servers.
 """
 
-from fabric import task
+from fabric.api import put, env, sudo
 from os.path import exists
-from datetime import datetime
-import os
 
-env.hosts = ['<IP web-01>', '<IP web-02>']
-env.user = '<your_username>'
-env.key_filename = '<path_to_your_ssh_private_key>'
 
-@task
-def do_deploy(c, archive_path):
-    """
-    Distributes an archive to web servers.
+env.user = 'ubuntu'
+env.hosts = ['52.91.118.253', '35.153.16.72']
+env.key_filename = '~/.ssh/school'
 
-    Args:
-        archive_path (str): Path to the archive to be deployed.
 
-    Returns:
-        bool: True if all operations have been done correctly, otherwise False.
-    """
+def do_deploy(archive_path):
+    '''Distributes an archive to my web servers'''
     if not exists(archive_path):
         return False
 
     try:
-        # Upload the archive to /tmp/ directory on the web server
-        archive_filename = os.path.basename(archive_path)
-        archive_remote_path = "/tmp/" + archive_filename
-        c.put(archive_path, archive_remote_path)
-
-        # Extract the archive to /data/web_static/releases/ folder
-        release_folder = "/data/web_static/releases/"
-        release_folder += archive_filename.split('.')[0] + "/"
-        c.run(f"sudo mkdir -p {release_folder}")
-        c.run(f"sudo tar -xzf {archive_remote_path} -C {release_folder}")
-        c.run(f"sudo rm {archive_remote_path}")
-
-        # Delete the symbolic link /data/web_static/current
-        current_link = "/data/web_static/current"
-        c.run(f"sudo rm -f {current_link}")
-
-        # Create a new symbolic link pointing to the new version
-        c.run(f"sudo ln -s {release_folder} {current_link}")
-
+        # extract archive name w/out extension
+        archive = archive_path.split('/')[-1].split('.')[0]
+        target = f'/data/web_static/releases/{archive}'
+        # upload archive to /tmp/
+        put(archive_path, '/tmp/')
+        sudo(f'mkdir -p {target}')
+        sudo(f'tar -xzf /tmp/{archive}.tgz -C {target}')
+        sudo(f'rm /tmp/{archive}.tgz')
+        sudo(f'rsync -a {target}/web_static/ {target}')
+        sudo(f'rm -rf {target}/web_static')
+        # remove symbolic link
+        sudo('rm -rf /data/web_static/current')
+        # create new link
+        sudo(f'ln -s {target} /data/web_static/current')
         print("New version deployed!")
+
         return True
-
-    except Exception as e:
-        print(f"Deployment failed: {e}")
+    except Exception:
         return False
-
