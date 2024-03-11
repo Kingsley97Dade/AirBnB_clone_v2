@@ -7,9 +7,9 @@ from fabric import task
 import os
 from datetime import datetime
 
-env.hosts = ['<IP web-01>', '<IP web-02>']
-env.user = 'Kingsley Dade'
-env.key_filename = 'ssh 9cb0161e2be3@9cb0161e2be3.c567ebef.alx-cod.online'
+env.hosts = ['34.229.70.201', '52.204.71.189']
+env.user = 'Ubuntu'
+env.key_filename = '~/.ssh/school'
 
 @task
 def do_clean(c, number=0):
