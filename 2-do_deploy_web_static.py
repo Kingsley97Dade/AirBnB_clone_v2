@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 """
 Fabric script for deploying web_static to web servers.
+Attrs:
+    env: enviroment variables for fabric
 """
 
 from fabric.api import put, env, sudo
