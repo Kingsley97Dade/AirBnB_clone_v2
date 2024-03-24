@@ -2,79 +2,41 @@
 """
 Starts a Flask web application
 """
-
 from flask import Flask, render_template
-
 app = Flask(__name__)
 
 
 @app.route('/', strict_slashes=False)
-def Hello_HBNB():
-    """
-    the function serving the root page
-    """
+def hbnb():
     return "Hello HBNB!"
 
 
 @app.route('/hbnb', strict_slashes=False)
-def HBNB():
-    """
-    the function serving the hbnb page
-    """
+def hbnb_1():
     return "HBNB"
 
 
 @app.route('/c/<text>', strict_slashes=False)
-def c_text(text):
-    """
-    the function displaying /c/<text>
-    """
-    new_text = text.replace('_', ' ')
-    return "C {}".format(new_text)
+def hbnb_2(text):
+    text_adj = text.replace("_", " ")
+    return "C {}".format(text_adj)
 
 
-@app.route('/python', strict_slashes=False)
+@app.route('/python', defaults={'text': 'is cool'}, strict_slashes=False)
 @app.route('/python/<text>', strict_slashes=False)
-def python_text(text="is cool"):
-    """
-    the function displaying /python/<text>>
-    """
-    new_text = text.replace('_', ' ')
-    return "Python {}".format(new_text)
+def hbnb_3(text):
+    text_u = text.replace("_", " ")
+    return ("Python {}".format(text_u))
 
 
-@app.route('/number/<int:n>', strict_slashes=False)
-def number_only(n):
-    """
-    the function displaying number only
-    """
+@app.route('/number/<int:n>')
+def hbnb_4(n):
     return "{} is a number".format(n)
 
 
-@app.route('/number_template/<int:n>', strict_slashes=False)
-def number_template(n):
-    """
-    the function that display a number template using rendering
-    """
-    return render_template("5-number.html", n=n)
+@app.route('/number_template/<int:n>')
+def hbnb_5(n):
+    return render_template('5-number.html', n=n)
 
-
-if __name__ == "__main__":
-    """
-    Run the application when the script is executed directly.
-
-    This block of code is executed only if the Python script is run
-    directly, not imported as a module. It starts the Flask application,
-    allowing it to be accessed externally.
-    """
-
-    Usage:
-        0-hello_route.py
-
-    Args:
-        host (str): The IP address to bind the Flask application to.
-                    Defaults to "0.0.0.0" to allow external access.
-        port (int): The port number to run the Flask application on.
-                    Defaults to 5000.
-
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port='5000')
